@@ -1,4 +1,8 @@
 Hello!
 
-This is login plugin for CMS Qastion2Answers.
-It add Loginza functionalyti to your site
+This is login plugin for CMS Qastion2Answers (http://question2answer.org/)
+It add Loginza (http://loginza.ru) to your site
+
+Create directory "loginza-login" in "/qa-plugin/" and put in files "qa-plugin.php" and "qa-loginza-login.php"
+
+Other instructions in "qa-loginza-login.php"
