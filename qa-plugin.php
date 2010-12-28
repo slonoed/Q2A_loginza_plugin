@@ -9,22 +9,19 @@
 	File: qa-plugin/loginza-login/qa-loginza.php
 	Version: 1.3
 	Date: 2010-11-23 06:34:00 GMT
-	Description: Initiates Facebook login plugin
+	Description: Initiates Loginza login plugin
 
 
 
 */
 
 /*
-	Plugin Name: Facebook Login
+	Plugin Name: Loginza Login
 	Plugin URI: 
-	Plugin Description: Allows users to log in via Facebook
+	Plugin Description: Allows users to log in via Loginza
 	Plugin Version: 1.0
 	Plugin Date: 2010-10-31
-	Plugin Author: Question2Answer
-	Plugin Author URI: http://www.question2answer.org/
-	Plugin License: GPLv2
-	Plugin Minimum Question2Answer Version: 1.3
+	Plugin Author: SLonoed
 */
 
 
@@ -34,7 +31,7 @@
 	}
 
 
-	qa_register_plugin_module('login', 'qa-loginza-login.php', 'qa_loginza_login', 'Loginza');
+	qa_register_plugin_module('login', 'qa-loginza-login.php', 'qa_loginza_login', 'loginza');
 	
 
 /*
