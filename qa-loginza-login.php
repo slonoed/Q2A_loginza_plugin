@@ -86,8 +86,6 @@
 			// if cookies is set
 			if (isset($_COOKIE["qa_loginza_id"]) && isset($_COOKIE["qa_loginza_scr"]))
 			{
-				
-
 				$uid = $_COOKIE['qa_loginza_id'];
 				$cook = $_COOKIE['qa_loginza_scr'];
 				
@@ -129,8 +127,9 @@
 			
 			if ($gologin)
 			{
-
-				qa_log_in_external_user('loginza', $identity, $userdata);
+				//TODO add userdata convert to userfields
+				$userfields = null;
+				qa_log_in_external_user('loginza', $identity, $userfields);
 			
 					// This code, if user sucses loged in
 
@@ -142,7 +141,6 @@
 					{
 						//TODO set random generation
 						qa_db_user_set_password($uid, 'defaultpassword');
-								qa_fatal_error("ss");
 					}
 
 					$useraccount = qa_db_select_with_pending(qa_db_user_account_selectspec($uid, true));
@@ -152,7 +150,7 @@
 					$expire = time() + 2 * 24 * 60 * 60;
 					$expire2 = time() + 2 * 24 * 60 * 60;
 					setcookie('qa_loginza_id',  $uid, $expire);
-					setcookie('qa_loginza_scr', $secret, $expire2);				
+					setcookie('qa_loginza_scr', $secret, $expire2);
 			}
 		}
 		
