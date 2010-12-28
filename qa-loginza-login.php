@@ -17,7 +17,7 @@
 		// ru - Russian
 		// en - English
 		// uk - Ukrainian
-		var $LOGINZA_LANG = "ru";
+		var $LOGINZA_LANG = "ru";		
 		
 		// end Loginza settings
 
@@ -35,38 +35,38 @@
 
 		function check_login()
 		{
-			$gologin = false; // логинимся?
-			$userdata = null; // даные о новом юзере
-			$identity = '';
-					
-			//TODO проверяем IP			
 
+			$gologin = false; // login?
+			$userdata = null; 
+			$identity = '';   
+			
+			// if cookies is set
 			if (isset($_COOKIE["qa_loginza_id"]) && isset($_COOKIE["qa_loginza_scr"]))
 			{
 				require_once QA_INCLUDE_DIR.'qa-db-users.php';
 				require_once QA_INCLUDE_DIR.'qa-db-selects.php';
+				require_once QA_INCLUDE_DIR.'qa-db.php';
 
 				$uid = $_COOKIE['qa_loginza_id'];
 				$cook = $_COOKIE['qa_loginza_scr'];
-				$userip = isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : $_SERVER['REMOTE_ADDR'];
+				
+				//TODO
+				//$userip = isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : $_SERVER['REMOTE_ADDR'];
 
 				$useraccount = qa_db_select_with_pending(qa_db_user_account_selectspec($uid, true));
 				$secret = $useraccount['passcheck'];
 				$lastip = $useraccount['loginip'];
-
-				if (!strcmp($secret, $cook) && !strcmp($lastip, $userip))
+				if (!strcmp($secret, $cook) /*&& !strcmp($lastip, $userip)*/)
 				{
-					$identity = qa_db_read_all_values(qa_db_query_sub('SELECT identifier FROM ^userlogins WHERE userid=$',$uid));
-					$identity = $identity[0];
-				}			
-					
-
-				$gologin = true;
+					$sub = qa_db_read_all_values(qa_db_query_sub('SELECT identifier FROM ^userlogins WHERE userid=$',$uid));
+					$identity = $sub[0];
+					$gologin = true;
+				}							
 			}
 
-			// если логинится новый юзер
+			// if login throwout Loginza
 			if (isset($_REQUEST["token"]))
-			{					
+			{
 				$rawuser = qa_retrieve_url('http://loginza.ru/api/authinfo?token='.$_POST['token']);
 				if (strlen($rawuser)) 
 				{			
