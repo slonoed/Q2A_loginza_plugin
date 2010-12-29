@@ -21,10 +21,6 @@
 	Plugin Description: Allows users to log in via Loginza
 	Plugin Version: 0.1.1
 	Plugin Date: 2010-10-31
-	Plugin Author: Question2Answer
-	Plugin Author URI: http://www.question2answer.org/
-	Plugin License: GPLv2
-	Plugin Minimum Question2Answer Version: 1.3
 */
 
 
