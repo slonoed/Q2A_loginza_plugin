@@ -59,20 +59,42 @@
 		// uk - Ukrainian
 		var $LOGINZA_LANG = "ru";		
 		
-		var $LOGINZA_RETURN_URL = "http://quastion.slonoed.ru/"; // Change to your site login page
+		// Change to your site login page
+		var $LOGINZA_RETURN_URL = "http://quastion.slonoed.ru/"; 
+		
+		// CSS style to remember bution
+		var $LOGINZA_REMEMBER_BTN_STYLE = '#lgzbtn {padding:15px;background:#ddd;}\n#lgzbtn .on {background:green;}';
 		
 		// end Loginza settings
 
 		var $directory;
 		var $urltoroot;
+		var $translate;
 
 		
 
 		function load_module($directory, $urltoroot)
-		{				
-
+		{	
 			$this->directory=$directory;
 			$this->urltoroot=$urltoroot;
+			
+			switch ($this->LOGINZA_LANG)
+			{
+			case "ru":
+				$this->translate["remember_me"] = "Запомнить";
+				$this->translate["remember"] = "Запомнен";
+				break;
+			case "uk":
+				$this->translate["remember_me"] = "Запомнить";
+				$this->translate["remember"] = "Запомнить";
+				break;
+			default:
+				$this->translate["remember_me"] = "Remember Me";
+				$this->translate["remember"] = "Remember";
+				break;
+			}
+			
+			
 		}
 
 		function check_login()
@@ -160,17 +182,42 @@
 		function match_source($source)
 		{
 			return $source=='loginza';
-		}
-		
+		}		
 				
 		function login_html($tourl, $context)
 		{
+		
+			?>
+			<script type="text/javascript">
+			function ChangeRememberStatus() 
+			{
+				var btn = document.getElementById('lgzbtn');
+				var frame = document.getElementById('lgzframe');
+				if (btn.className == 'on')
+				{
+					btn.innerHTML = "<?echo $this->translate["remember_me"]?>";
+					btn.className = '';
+					frame.src = "http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL);?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>";
+				}
+				else
+				{
+					btn.innerHTML = "<?echo $this->translate["remember"]?>";
+					btn.className = 'on';
+					frame.src = "http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL . "?remember=true");?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>";
+				}
+			}
+			</script>
+			<?
 			
 			if ($this->LOGINZA_IS_IFRAME)
 			{
 			?>
 			<script src="http://loginza.ru/js/widget.js" type="text/javascript"></script>
-			<iframe src="http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL);?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>" style="width:359px;height:300px;" scrolling="no" frameborder="no"></iframe>
+			<iframe src="http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL);?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>" style="width:359px;height:300px;" scrolling="no" frameborder="no" id="lgzframe"></iframe>
+			<style type="text/css">
+			<?echo $this->LOGINZA_REMEMBER_BTN_STYLE?>
+			</style>
+			<a href="#" onclick="ChangeRememberStatus()" id="lgzbtn"><?echo $this->translate["remember_me"]?></a>
 			<?
 			}
 			else
