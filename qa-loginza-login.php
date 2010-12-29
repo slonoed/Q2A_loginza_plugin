@@ -59,6 +59,8 @@
 		// uk - Ukrainian
 		var $LOGINZA_LANG = "ru";		
 		
+		var $LOGINZA_RETURN_URL = "http://quastion.slonoed.ru/"; // Change to your site login page
+		
 		// end Loginza settings
 
 		var $directory;
@@ -166,21 +168,17 @@
 			
 			if ($this->LOGINZA_IS_IFRAME)
 			{
-				echo '<script src="http://loginza.ru/js/widget.js" type="text/javascript"></script>';
-				echo '<iframe src="http://loginza.ru/api/widget?overlay=loginza&token_url=';
-				echo urlencode("http://quastion.slonoed.ru/");
-				echo '&providers_set=' . $this->LOGINZA_PROVIDERS;
-				echo '&lang=' . $this->LOGINZA_LANG;
-				echo '" style="width:359px;height:300px;" scrolling="no" frameborder="no"></iframe>';
+			?>
+			<script src="http://loginza.ru/js/widget.js" type="text/javascript"></script>
+			<iframe src="http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL);?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>" style="width:359px;height:300px;" scrolling="no" frameborder="no"></iframe>
+			<?
 			}
 			else
 			{
-				echo '<script src="https://s3-eu-west-1.amazonaws.com/s1.loginza.ru/js/widget.js" type="text/javascript"></script>';
-				echo '<a href="http://loginza.ru/api/widget?token_url=';
-				echo urlencode("http://quastion.slonoed.ru/");
-				echo '&providers_set=' . $this->LOGINZA_PROVIDERS;
-				echo '&lang=' . $this->LOGINZA_LANG;
-				echo '" class="loginza"><img src="http://loginza.ru/img/sign_in_button_gray.gif" alt="Войти через loginza"/></a>';
+			?>
+				<script src="https://s3-eu-west-1.amazonaws.com/s1.loginza.ru/js/widget.js" type="text/javascript"></script>
+				<a href="http://loginza.ru/api/widget?token_url=<?echo urlencode($this->LOGINZA_RETURN_URL);?>&providers_set=<?echo$this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>" class="loginza"><img src="http://loginza.ru/img/sign_in_button_gray.gif" alt="Войти через loginza"/></a>
+			<?
 			}
 		} 
 		
