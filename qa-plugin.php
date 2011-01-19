@@ -7,9 +7,9 @@
 
 	
 	File: qa-plugin/loginza-login/qa-loginza.php
-	Version: 1.3
+	Version: 0.1.
 	Date: 2010-11-23 06:34:00 GMT
-	Description: Initiates Facebook login plugin
+	Description: Initiates Loginza login plugin
 
 
 
