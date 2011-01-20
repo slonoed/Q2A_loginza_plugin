@@ -59,20 +59,42 @@
 		// uk - Ukrainian
 		var $LOGINZA_LANG = "ru";		
 		
-		var $LOGINZA_RETURN_URL = "http://quastion.slonoed.ru/"; // Change to your site login page
+		// Change to your site login page
+		var $LOGINZA_RETURN_URL = "http://quastion.slonoed.ru/"; 
+		
+		// CSS style to remember button
+		// TODO good button style
+		var $LOGINZA_REMEMBER_BTN_STYLE = '#lgzbtn {padding:15px;background:#ddd;}\n#lgzbtn .on {background:green;}';
+
+		// Cookies expire time (hours)
+		var $LOGINZA_COOKIES_EXPIRE_TIME = 48;
 		
 		// end Loginza settings
 
 		var $directory;
 		var $urltoroot;
-
-		
+		var $translate;
 
 		function load_module($directory, $urltoroot)
-		{				
-
+		{	
 			$this->directory=$directory;
 			$this->urltoroot=$urltoroot;
+			
+			switch ($this->LOGINZA_LANG)
+			{
+			case "ru":
+				$this->translate["remember_me"] = "Запомнить";
+				$this->translate["remember"] = "Запомнен";
+				break;
+			case "uk":
+				$this->translate["remember_me"] = "Запомнить";
+				$this->translate["remember"] = "Запомнить";
+				break;
+			default:
+				$this->translate["remember_me"] = "Remember Me";
+				$this->translate["remember"] = "Remember";
+				break;
+			}			
 		}
 
 		function check_login()
@@ -83,7 +105,8 @@
 
 			$gologin = false; // login?
 			$userdata = null; 
-			$identity = '';   
+			$identity = '';
+			$setcookie = false;
 			
 			// if cookies is set
 			if (isset($_COOKIE["qa_loginza_id"]) && isset($_COOKIE["qa_loginza_scr"]))
@@ -91,24 +114,25 @@
 				$uid = $_COOKIE['qa_loginza_id'];
 				$cook = $_COOKIE['qa_loginza_scr'];
 				
-				//TODO
-				//$userip = isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : $_SERVER['REMOTE_ADDR'];
+				//TODO userIp checking
+				//	$userip = isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : $_SERVER['REMOTE_ADDR'];
 
 				$useraccount = qa_db_select_with_pending(qa_db_user_account_selectspec($uid, true));
 				$secret = $useraccount['passcheck'];
 				$lastip = $useraccount['loginip'];
 				if (!strcmp($secret, $cook) /*&& !strcmp($lastip, $userip)*/)
 				{
+					// Get identity from db
 					$sub = qa_db_read_all_values(qa_db_query_sub('SELECT identifier FROM ^userlogins WHERE userid=$',$uid));
 					$identity = $sub[0];
 					$gologin = true;
+					$setcookie = true;
 				}							
 			}
 
 			// if login throwout Loginza
 			if (isset($_REQUEST["token"]))
-			{
-			
+			{			
 				$rawuser = qa_retrieve_url('http://loginza.ru/api/authinfo?token='.$_POST['token']);
 				if (strlen($rawuser)) 
 				{			
@@ -122,7 +146,9 @@
 						$userdata = $user;
 						$identity = $userdata['identity'];
 
-						//TODO Get remember me
+						// If user set remember option
+						if (isset($_REQUEST["remember"]))
+							$setcookie = true;
 					}
 				}
 			}
@@ -133,26 +159,29 @@
 				$userfields = null;
 				qa_log_in_external_user('loginza', $identity, $userfields);
 			
-					// This code, if user sucses loged in
+				// This code, if user sucses loged in
 
-					$secret = '';
-					$uid = qa_get_logged_in_userid();
+				$secret = '';
+				$uid = qa_get_logged_in_userid();
 
-					// When external user login, Q2A not set passcheck for him. Do  it
-					if (!qa_get_logged_in_user_field('passsalt') || !qa_get_logged_in_user_field('passcheck'))
-					{
-						//TODO set random generation
-						qa_db_user_set_password($uid, 'defaultpassword');
-					}
+				// When external user login, Q2A not set passcheck for him. Do  it
+				if (!qa_get_logged_in_user_field('passsalt') || !qa_get_logged_in_user_field('passcheck'))
+				{
+					$randompassword = rand_str(15);
+					qa_db_user_set_password($uid, $randompassword);
+				}
 
-					$useraccount = qa_db_select_with_pending(qa_db_user_account_selectspec($uid, true));
-					$secret = $useraccount['passcheck'];
-				
+				$useraccount = qa_db_select_with_pending(qa_db_user_account_selectspec($uid, true));
+				$secret = $useraccount['passcheck'];
+
+				if ($setcookie)
+				{
 					// 2 days cookie
-					$expire = time() + 2 * 24 * 60 * 60;
-					$expire2 = time() + 2 * 24 * 60 * 60;
+					$expire = time() + $this->LOGINZA_COOKIES_EXPIRE_TIME * 60 * 60;
+					$expire2 = time() + $this->LOGINZA_COOKIES_EXPIRE_TIME * 60 * 60;
 					setcookie('qa_loginza_id',  $uid, $expire);
 					setcookie('qa_loginza_scr', $secret, $expire2);
+				}
 			}
 		}
 		
@@ -160,17 +189,41 @@
 		function match_source($source)
 		{
 			return $source=='loginza';
-		}
-		
+		}		
 				
 		function login_html($tourl, $context)
 		{
-			
+		
+			?>
+				<script type="text/javascript">
+				function ChangeRememberStatus()
+				{
+					var btn = document.getElementById('lgzbtn');
+					var frame = document.getElementById('lgzframe');
+					if (btn.className == 'on')
+					{
+						btn.innerHTML = "<?echo $this->translate["remember_me"]?>";
+						btn.className = '';
+						frame.src = "http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL);?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>";
+					}
+					else
+					{
+						btn.innerHTML = "<?echo $this->translate["remember"]?>";
+						btn.className = 'on';
+						frame.src = "http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL . "?remember=true");?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>";
+					}
+				}
+				</script>
+			<?			
 			if ($this->LOGINZA_IS_IFRAME)
 			{
 			?>
-			<script src="http://loginza.ru/js/widget.js" type="text/javascript"></script>
-			<iframe src="http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL);?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>" style="width:359px;height:300px;" scrolling="no" frameborder="no"></iframe>
+				<script src="http://loginza.ru/js/widget.js" type="text/javascript"></script>
+				<iframe src="http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL);?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>" style="width:359px;height:300px;" scrolling="no" frameborder="no" id="lgzframe"></iframe>
+				<style type="text/css">
+				<?echo $this->LOGINZA_REMEMBER_BTN_STYLE?>
+				</style>
+				<a href="#" onclick="ChangeRememberStatus()" id="lgzbtn"><?echo $this->translate["remember_me"]?></a>
 			<?
 			}
 			else
@@ -184,7 +237,6 @@
 		
 		function logout_html($tourl)
 		{
-
 			// Delete cookies when logout and redirect to ./logout
 			?>
 			<script type="text/javascript">
@@ -198,5 +250,28 @@
 
 			<a href="#" onclick="DelLoginzaCookies()">Exit</a>
 			<?
+		}
+
+		// Generate a random character string
+		function rand_str($length = 32, $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890')
+		{
+			// Length of character list
+			$chars_length = (strlen($chars) - 1);
+
+			// Start our string
+			$string = $chars{rand(0, $chars_length)};
+
+			// Generate random string
+			for ($i = 1; $i < $length; $i = strlen($string))
+			{
+				// Grab a random character from our list
+				$r = $chars{rand(0, $chars_length)};
+
+				// Make sure the same two characters don't appear next to each other
+				if ($r != $string{$i - 1}) $string .=  $r;
+			}
+
+			// Return the string
+			return $string;
 		}
 	};
