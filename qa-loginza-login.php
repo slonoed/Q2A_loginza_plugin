@@ -85,14 +85,17 @@
 			case "ru":
 				$this->translate["remember_me"] = "Запомнить";
 				$this->translate["remember"] = "Запомнен";
+				$this->translate["exitlink"] = "Выход";
 				break;
 			case "uk":
 				$this->translate["remember_me"] = "Запомнить";
 				$this->translate["remember"] = "Запомнить";
+				$this->translate["exitlink"] = "Выход";
 				break;
 			default:
 				$this->translate["remember_me"] = "Remember Me";
 				$this->translate["remember"] = "Remember";
+				$this->translate["exitlink"] = "Exit";
 				break;
 			}			
 		}
@@ -114,12 +117,16 @@
 				$uid = $_COOKIE['qa_loginza_id'];
 				$cook = $_COOKIE['qa_loginza_scr'];
 				
-				//TODO userIp checking
-				//	$userip = isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : $_SERVER['REMOTE_ADDR'];
+				// TODO userIp checking
+				// some trouble with ip in db. Its not change on login
+				// $userip = isset($_SERVER['HTTP_X_REAL_IP']) ? $_SERVER['HTTP_X_REAL_IP'] : $_SERVER['REMOTE_ADDR'];
 
 				$useraccount = qa_db_select_with_pending(qa_db_user_account_selectspec($uid, true));
 				$secret = $useraccount['passcheck'];
-				$lastip = $useraccount['loginip'];
+				//$lastip = $useraccount['loginip'];
+
+				//qa_fatal_error($userip." == ". $lastip);
+
 				if (!strcmp($secret, $cook) /*&& !strcmp($lastip, $userip)*/)
 				{
 					// Get identity from db
@@ -173,6 +180,8 @@
 
 				$useraccount = qa_db_select_with_pending(qa_db_user_account_selectspec($uid, true));
 				$secret = $useraccount['passcheck'];
+
+				// TODO set loginip in db
 
 				if ($setcookie)
 				{
@@ -248,7 +257,7 @@
 				}
 			</script>
 
-			<a href="#" onclick="DelLoginzaCookies()">Exit</a>
+			<a href="#" onclick="DelLoginzaCookies()"><? echo $this->translate['exitlink'] ?></a>
 			<?
 		}
 
