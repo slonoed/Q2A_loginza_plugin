@@ -33,7 +33,7 @@
 		// Providers. You can use:
 		// google, yandex, mailruapi, mailru, vkontakte, facebook, twitter, loginza, 
 		// myopenid, webmoney, rambler, flickr, lastfm, verisign, aol, steam, openid
-		var $LOGINZA_PROVIDERS = "vkontakte,facebook,twitter,google";
+		var $LOGINZA_PROVIDERS = "google,yandex,mailruapi,mailru,vkontakte,facebook,twitter,loginza,myopenid,webmoney,rambler,flickr,lastfm,verisign,aol,steam,openid";
 		
 		// Use iframe. If false - use JS widget.
 		// Warning!!! If you use iframe, change theme file, because iframe have 300px height.
@@ -105,32 +105,38 @@
 			switch($data['provider'])
 			{
 				case 'https://www.google.com/accounts/o8/ud':
-					$fields['handle'] = @$data['name']['full_name'];
+					$fields['handle'] = @$data['name']['first_name']. ' ' .@$data['name']['last_name'];
+					$fields['email'] = @$data['email'];
+					$fields['confirmed'] = true;
+					$fields['avatar'] = strlen(@$data['photo']) ? qa_retrieve_url($data['photo']) : null;
 				break;
-
 				case 'http://openid.yandex.ru/server/':
-					$fields['handle'] = $data['identity'];
+					$fields['handle'] = @$data['identity'];
 				break;
-
 				case 'http://mail.ru/':
-					$fields['handle'] = $data['nickname'];
+					$fields['handle'] = @$data['nickname'];
 				break;
-
 				case 'http://vkontakte.ru/':
 					$fields['handle'] = @$data['name']['first_name'] . ' ' . @$data['name']['last_name'];
-					$fields['avatar'] = strlen(@$data['picture']) ? qa_retrieve_url($data['picture']) : null;
+					$fields['website'] = @$data['identity'];
+					$fields['avatar'] = strlen(@$data['photo']) ? qa_retrieve_url($data['photo']) : null;
 				break;
-
 				case 'http://www.facebook.com/':
 					$fields['handle'] = $data['name']['full_name'];
+					$fields['email'] = @$data['email'];
+					$fields['confirmed'] = true;
+					$fields['website'] = @$data['web']['default'];
+					// TODO loginza return link that redirect to real avatar
+					$fields['avatar'] = strlen(@$user['picture']) ? qa_retrieve_url($user['picture']) : null;
 				break;
-
 				case 'http://twitter.com/':
-					$fields['handle'] = $data['name']['full_name'];
+					$fields['handle'] = @$data['name']['full_name'];
+					$fields['website'] = @$data['web']['default'];
+					$fields['about'] = @$data['biography'];
+					$fields['avatar'] = strlen(@$data['photo']) ? qa_retrieve_url($data['photo']) : null;
 				break;
-
 				case 'https://steamcommunity.com/openid/login':
-					$fields['handle'] = $data['identity'];
+					$fields['handle'] = @$data['identity'];
 				break;
 				default:
 				break;
@@ -177,7 +183,8 @@
 			{			
 				$rawuser = qa_retrieve_url('http://loginza.ru/api/authinfo?token='.$_POST['token']);
 				if (strlen($rawuser)) 
-				{			
+				{
+				 qa_fatal_error($rawuser);
 					include_once 'JSON.php';
 					$json=new Services_JSON(SERVICES_JSON_LOOSE_TYPE);
 					
@@ -309,10 +316,6 @@
 			<a href="#" onclick="DelLoginzaCookies()">Exit</a>
 			<?
 		}
-
-		
-
-	
 
 		
 	};
