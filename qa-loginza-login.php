@@ -33,7 +33,7 @@
 		// Providers. You can use:
 		// google, yandex, mailruapi, mailru, vkontakte, facebook, twitter, loginza, 
 		// myopenid, webmoney, rambler, flickr, lastfm, verisign, aol, steam, openid
-		var $LOGINZA_PROVIDERS = "vkontakte,facebook,twitter,google";
+		var $LOGINZA_PROVIDERS = "google,yandex,mailruapi,mailru,vkontakte,facebook,twitter,loginza,myopenid,webmoney,rambler,flickr,lastfm,verisign,aol,steam,openid";
 		
 		// Use iframe. If false - use JS widget.
 		// Warning!!! If you use iframe, change theme file, because iframe have 300px height.
@@ -60,7 +60,7 @@
 		var $LOGINZA_LANG = "ru";		
 		
 		// Change to your site login page
-		var $LOGINZA_RETURN_URL = "http://quastion.slonoed.ru/"; 
+		var $LOGINZA_RETURN_URL = "http://2type.ru/";
 		
 		// CSS style to remember button
 		// TODO good button style
@@ -97,7 +97,54 @@
 			}			
 		}
 
-		function check_login()
+		function get_userfields($data)
+		{
+			
+			$fields = null;
+			
+			switch($data['provider'])
+			{
+				case 'https://www.google.com/accounts/o8/ud':
+					$fields['handle'] = @$data['name']['first_name']. ' ' .@$data['name']['last_name'];
+					$fields['email'] = @$data['email'];
+					$fields['confirmed'] = true;
+					$fields['avatar'] = strlen(@$data['photo']) ? qa_retrieve_url($data['photo']) : null;
+				break;
+				case 'http://openid.yandex.ru/server/':
+					$fields['handle'] = @$data['identity'];
+				break;
+				case 'http://mail.ru/':
+					$fields['handle'] = @$data['nickname'];
+				break;
+				case 'http://vkontakte.ru/':
+					$fields['handle'] = @$data['name']['first_name'] . ' ' . @$data['name']['last_name'];
+					$fields['website'] = @$data['identity'];
+					$fields['avatar'] = strlen(@$data['photo']) ? qa_retrieve_url($data['photo']) : null;
+				break;
+				case 'http://www.facebook.com/':
+					$fields['handle'] = $data['name']['full_name'];
+					$fields['email'] = @$data['email'];
+					$fields['confirmed'] = true;
+					$fields['website'] = @$data['web']['default'];
+					// TODO loginza return link that redirect to real avatar
+					$fields['avatar'] = strlen(@$user['picture']) ? qa_retrieve_url($user['picture']) : null;
+				break;
+				case 'http://twitter.com/':
+					$fields['handle'] = @$data['name']['full_name'];
+					$fields['website'] = @$data['web']['default'];
+					$fields['about'] = @$data['biography'];
+					$fields['avatar'] = strlen(@$data['photo']) ? qa_retrieve_url($data['photo']) : null;
+				break;
+				case 'https://steamcommunity.com/openid/login':
+					$fields['handle'] = @$data['identity'];
+				break;
+				default:
+				break;
+			}
+			return $fields;
+		}
+
+			function check_login()
 		{
 			require_once QA_INCLUDE_DIR.'qa-db-users.php';
 			require_once QA_INCLUDE_DIR.'qa-db-selects.php';
@@ -107,6 +154,7 @@
 			$userdata = null; 
 			$identity = '';
 			$setcookie = false;
+			$userfields = null;
 			
 			// if cookies is set
 			if (isset($_COOKIE["qa_loginza_id"]) && isset($_COOKIE["qa_loginza_scr"]))
@@ -135,9 +183,11 @@
 			{			
 				$rawuser = qa_retrieve_url('http://loginza.ru/api/authinfo?token='.$_POST['token']);
 				if (strlen($rawuser)) 
-				{			
+				{
+				 qa_fatal_error($rawuser);
 					include_once 'JSON.php';
 					$json=new Services_JSON(SERVICES_JSON_LOOSE_TYPE);
+					
 					$user=$json->decode($rawuser);
 					
 					if (is_array($user))
@@ -146,6 +196,10 @@
 						$userdata = $user;
 						$identity = $userdata['identity'];
 
+						//TODO add userdata convert to userfields
+						
+						$userfields = $this->get_userfields($userdata);
+						
 						// If user set remember option
 						if (isset($_REQUEST["remember"]))
 							$setcookie = true;
@@ -155,22 +209,33 @@
 			
 			if ($gologin)
 			{
-				//TODO add userdata convert to userfields
-				$userfields = null;
+				
 				qa_log_in_external_user('loginza', $identity, $userfields);
-			
+
 				// This code, if user sucses loged in
 
 				$secret = '';
 				$uid = qa_get_logged_in_userid();
 
+				
 				// When external user login, Q2A not set passcheck for him. Do  it
 				if (!qa_get_logged_in_user_field('passsalt') || !qa_get_logged_in_user_field('passcheck'))
 				{
-					$randompassword = rand_str(15);
+
+					$chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890';
+					$randompassword = $chars{rand(0, 15)};
+					// Generate random string
+					for ($i = 1; $i < $length; $i = strlen($randompassword))
+					{
+						// Grab a random character from our list
+						$r = $chars{rand(0, $chars_length)};
+						// Make sure the same two characters don't appear next to each other
+						if ($r != $randompassword{$i - 1}) $randompassword .=  $r;
+					}
+					//	set password
 					qa_db_user_set_password($uid, $randompassword);
 				}
-
+				
 				$useraccount = qa_db_select_with_pending(qa_db_user_account_selectspec($uid, true));
 				$secret = $useraccount['passcheck'];
 
@@ -252,26 +317,5 @@
 			<?
 		}
 
-		// Generate a random character string
-		function rand_str($length = 32, $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890')
-		{
-			// Length of character list
-			$chars_length = (strlen($chars) - 1);
-
-			// Start our string
-			$string = $chars{rand(0, $chars_length)};
-
-			// Generate random string
-			for ($i = 1; $i < $length; $i = strlen($string))
-			{
-				// Grab a random character from our list
-				$r = $chars{rand(0, $chars_length)};
-
-				// Make sure the same two characters don't appear next to each other
-				if ($r != $string{$i - 1}) $string .=  $r;
-			}
-
-			// Return the string
-			return $string;
-		}
+		
 	};
