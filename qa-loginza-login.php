@@ -64,7 +64,7 @@
 		
 		// CSS style to remember button
 		// TODO good button style
-		var $LOGINZA_REMEMBER_BTN_STYLE = '#lgzbtn {padding:15px;background:#ddd;}\n#lgzbtn .on {background:green;}';
+		var $LOGINZA_REMEMBER_BTN_STYLE = '#lgzbtn {position:relative;display:block;padding:5px;background:#ddd;width:350px;background: url(https://s3-eu-west-1.amazonaws.com/s1.loginza.ru/img/widget/button_bg.gif) repeat-x;border: solid 1px #C4C4C4;border-collapse: collapse;box-sizing: border-box;color: #838383;font-family: Arial;font-size: 18px;font-weight: bold;height: 34px;}\n#lgzbtn .on {background:green;}';
 
 		// Cookies expire time (hours)
 		var $LOGINZA_COOKIES_EXPIRE_TIME = 48;
@@ -284,7 +284,8 @@
 			{
 			?>
 				<script src="http://loginza.ru/js/widget.js" type="text/javascript"></script>
-				<iframe src="http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL);?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>" style="width:359px;height:300px;" scrolling="no" frameborder="no" id="lgzframe"></iframe>
+				<iframe src="http://loginza.ru/api/widget?overlay=loginza&token_url=<?echo urlencode($this->LOGINZA_RETURN_URL);?>&providers_set=<?echo $this->LOGINZA_PROVIDERS;?>&lang=<?echo $this->LOGINZA_LANG;?>"
+						style="width:359px;height:200px;" scrolling="no" frameborder="no" id="lgzframe"></iframe>
 				<style type="text/css">
 				<?echo $this->LOGINZA_REMEMBER_BTN_STYLE?>
 				</style>
