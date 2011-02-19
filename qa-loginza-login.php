@@ -144,7 +144,7 @@
 			return $fields;
 		}
 
-			function check_login()
+		function check_login()
 		{
 			require_once QA_INCLUDE_DIR.'qa-db-users.php';
 			require_once QA_INCLUDE_DIR.'qa-db-selects.php';
@@ -184,7 +184,6 @@
 				$rawuser = qa_retrieve_url('http://loginza.ru/api/authinfo?token='.$_POST['token']);
 				if (strlen($rawuser)) 
 				{
-				 qa_fatal_error($rawuser);
 					include_once 'JSON.php';
 					$json=new Services_JSON(SERVICES_JSON_LOOSE_TYPE);
 					
